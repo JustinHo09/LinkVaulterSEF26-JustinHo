@@ -138,6 +138,37 @@ def test_issue_24():
     payload = "title,url,tags\nA,https://a.test,python;web\n,,\n"
     assert import_csv(payload) == [{"title": "A", "url": "https://a.test", "tags": ["python", "web"]}]
 
+def test_issue_24_space_between_tags():
+    payload = "title,url,tags\nA,https://a.test,python ; web"
+    assert import_csv(payload) == [{"title": "A", "url": "https://a.test", "tags": ["python", "web"]}]
+
+
+def test_issue_24_skip_blank():
+    payload = "title,url,tags\n,,\nA,https://a.test,python;web\n,,"
+    assert import_csv(payload) == [{"title": "A", "url": "https://a.test", "tags": ["python", "web"]}]
+
+def test_issue_24_blank_tag_segment():
+    payload = ("title,url,tags\nB,https://b.test,python;;web\n")
+    assert import_csv(payload) == [{"title":"B","url":"https://b.test","tags":["python","web"]}]
+
+def test_issue_24_blank_tag():
+    payload = ("title,url,tags\nB,https://b.test,\n")
+    assert import_csv(payload) == [{"title":"B","url":"https://b.test","tags":[]}]
+
+def test_issue_24_missing_tags_column():
+    payload = ("title,url\nB,https://b.test\n")
+    assert import_csv(payload) == [{"title":"B","url":"https://b.test","tags":[]}]
+
+def test_issue_24_missing_partial_row():
+    payload = ("title,url,tags\n,https://b.test,\nB,,\n,,python;web\n")
+    assert import_csv(payload) == [{"title": "", "url": "https://b.test", "tags": []},
+                                   {"title": "B", "url": "", "tags": []},
+                                   {"title": "", "url": "", "tags": ["python", "web"]}]
+
+
+def test_issue_24_missing_tag_value():
+    payload = ("title,url,tags\nB,https://b.test\n")
+    assert import_csv(payload) == [{"title":"B","url":"https://b.test","tags":[]}]
 
 def test_issue_25():
     original = {"id": 1, "title": "A", "url": "https://a.test", "tags": [], "owner_email": "student@example.edu", "internal_notes": "private"}
